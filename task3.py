@@ -13,7 +13,7 @@ ctl = DLQR(A, B, C)
 
 # Get control gains
 K, P = ctl.get_lqr_gain(Q = np.diag([1.0 / (8.75 ** 2), 1.0 / (2.67 ** 2),\
-                                     1.0 / (0.189 ** 2), 1.0 / (0.32 ** 2)]), R = 1.0 / (1.57 ** 2))
+                                     1.0 / (0.189 ** 2), 1.0 / (0.32 ** 2)]), R = 1.0 / (1.57 ** 2)) # From Assignment1, the max u is 1.57
 
 # Get feeforward gain
 lr = ctl.get_feedforward_gain(K)
