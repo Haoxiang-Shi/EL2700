@@ -47,7 +47,7 @@ class Pendulum(object):
         self.set_augmented_discrete_system()
 
         print("Pendulum class initialized")
-        print(self)                         # You can comment this line
+        # print(self)                         # You can comment this line
 
     def __str__(self):
         return """                                                                  

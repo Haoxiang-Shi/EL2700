@@ -10,10 +10,10 @@ pendulum = Pendulum()
 # Get the system discrete-time dynamics
 A, B, Bw, C = pendulum.get_discrete_system_matrices_at_eq()
 ctl = DLQR(A, B, C)
-
+rho = 0.1
 # Get control gains
-K, P = ctl.get_lqr_gain(Q= np.diag([1.0/100, 1.0/25, 1.0/0.03, 0/0.5]), 
-                        R=1.0/2)
+K, P = ctl.get_lqr_gain(Q= np.diag([1.0/100, 1.0/25, 1.0/0.03, 1.0/0.5]), 
+                        R=rho*1.0/4)
 
 # Get feeforward gain
 lr = ctl.get_feedforward_gain(K)
@@ -26,12 +26,12 @@ sim_env = EmbeddedSimEnvironment(model=pendulum,
 sim_env.set_window(10)
 t, y, u = sim_env.run([0,0,0,0])
 
-# # Part I - with disturbance
+# Part I - with disturbance
 # pendulum.enable_disturbance(w=0.01)  
 # sim_env_with_disturbance = EmbeddedSimEnvironment(model=pendulum, 
 #                                 dynamics=pendulum.discrete_time_dynamics,
 #                                 controller=ctl.feedfwd_feedback,
-#                                 time = 20)
+#                                 time = 10)
 # sim_env_with_disturbance.set_window(10)
 # t, y, u = sim_env_with_disturbance.run([0,0,0,0])
 
