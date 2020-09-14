@@ -24,7 +24,7 @@ class DLQR(object):
 
         self.int = None
 
-        print(self)                             # You can comment this line
+        # print(self)                             # You can comment this line
 
     def __str__(self):
         return """
@@ -202,5 +202,5 @@ class DLQR(object):
         _li = K[0,4]
 
         # Fill the correct control law below
-        u = 0
+        u = -_K @ x_t - _li * i + lr * r
         return u

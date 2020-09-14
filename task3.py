@@ -7,24 +7,25 @@ from simulation import EmbeddedSimEnvironment
 ENABLE_AUGMENTED = False # False --> Part 1; True --> Part 2 & 3
 ENABLE_DSTR = True # True --> Enable distrubance
 
-PART2_DEBUG = False
+PART2_DEBUG = True
 PART3_DEBUG = False
 
 # Create pendulum and controller objects
 pendulum = Pendulum()
-if ENABLE_AUGMENTED is False:
-    # Get the system discrete-time dynamics
-    A, B, Bw, C = pendulum.get_discrete_system_matrices_at_eq()
-    ctl = DLQR(A, B, C)
-    # Set parameter rho
-    rho = 1
-    # Get control gains
-    K, P = ctl.get_lqr_gain(Q= np.diag([1.0/100, 1.0/25, 1.0/0.03, 1.0/0.5]), 
-                        R=rho*1.0/4)
+# Get the system discrete-time dynamics
+A, B, Bw, C = pendulum.get_discrete_system_matrices_at_eq()
+ctl = DLQR(A, B, C)
+# Set parameter rho
+rho = 1
+# Get control gains
+K, P = ctl.get_lqr_gain(Q= np.diag([1.0/100, 1.0/25, 1.0/0.03, 1.0/0.5]), 
+                    R=rho*1.0/4)
 
 # Get feeforward gain
-    lr = ctl.get_feedforward_gain(K)
+lr = ctl.get_feedforward_gain(K)
 
+if ENABLE_AUGMENTED is False:
+    
 # Part I - no disturbance
     if ENABLE_DSTR is False:
         sim_env = EmbeddedSimEnvironment(model=pendulum, 
@@ -49,17 +50,17 @@ if ENABLE_AUGMENTED is True:
     if PART2_DEBUG is True:
         Ai, Bi, Bwi, Ci = pendulum.get_augmented_discrete_system()
         ctl.set_system(Ai, Bi, Ci)
-        K, P = ctl.get_lqr_gain(Q= np.diag([0, 0, 0, 0]), 
-                            R= 0)
+        K, P = ctl.get_lqr_gain(Q= np.diag([1.0/100, 1.0/25, 1.0/0.03, 1.0/0.5, 1]), 
+                            R= rho*1/4)
 
-    # Get feeforward gain              
+        # Get feeforward gain              
         ctl.set_lr(lr)     
 
         pendulum.enable_disturbance(w=0.01)  
         sim_env_with_disturbance = EmbeddedSimEnvironment(model=pendulum, 
                                     dynamics=pendulum.pendulum_augmented_dynamics,
                                     controller=ctl.lqr_ff_fb_integrator,
-                                    time = 20)
+                                    time = 10)
         sim_env_with_disturbance.set_window(10)
         t, y, u = sim_env_with_disturbance.run([0,0,0,0,0])
 

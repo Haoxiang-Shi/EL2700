@@ -2,7 +2,6 @@ import casadi as ca
 import numpy as np
 from filterpy.kalman import KalmanFilter
 
-ENABLE_AUGMENTED = False
 class Pendulum(object):
     def __init__(self, h=0.1):
         """
@@ -131,16 +130,6 @@ class Pendulum(object):
         self.Bw = ca.Function('jac_u_Bd', [x, u, w], [ca.jacobian(
                             self.Integrator_lin(x0=x, p=ca.vertcat(u, w))['xf'], w)])
         
-
-        # C matrix does not depend on the state
-        # TODO: put this in a better place later!
-        Cd_eq = ca.DM.zeros(1,4)
-        Cd_eq[0,0] = 1
-        Cd_eq[0,1] = 1
-        Cd_eq[0,2] = 1
-        Cd_eq[0,3] = 1
-
-        self.Cd_eq = Cd_eq
     
     def set_augmented_discrete_system(self):
         """
@@ -156,7 +145,15 @@ class Pendulum(object):
         Ad_eq = self.Ad(self.x_eq, self.u_eq, self.w)
         Bd_eq = self.Bd(self.x_eq, self.u_eq, self.w)
         Bw_eq = self.Bw(self.x_eq, self.u_eq, self.w)
+        # C matrix does not depend on the state
+        # TODO: put this in a better place later!
+        Cd_eq = ca.DM.zeros(1,4)
+        Cd_eq[0,0] = 1
+        Cd_eq[0,1] = 1
+        Cd_eq[0,2] = 1
+        Cd_eq[0,3] = 1
 
+        self.Cd_eq = Cd_eq
         # Instantiate augmented system
         self.Ad_i = ca.DM.zeros(5,5)
         self.Bd_i = ca.DM.zeros(5,1)
@@ -165,6 +162,13 @@ class Pendulum(object):
         self.R_i = ca.DM.zeros(5,1)
 
         # Populate matrices
+        self.Ad_i[0:4,0:4] = Ad_eq
+        self.Ad_i[4,0:4] = -self.dt @ self.Cd_eq
+        self.Ad_i[4,4] = 1
+        self.Bd_i[0:4,:] = Bd_eq
+        self.R_i[4,0] = self.dt
+        self.Bw_i[0:4,:] = Bw_eq
+        self.Cd_i[:,0:4] = self.Cd_eq
         # COMPLETE
 
     def pendulum_linear_dynamics(self, x, u, w):  
@@ -275,16 +279,11 @@ class Pendulum(object):
         :return: next state
         :rtype: casadi.DM
         """
-        x1 = x[0]
-        x2 = x[1]
-        x3 = x[2]
-        x4 = x[3]
 
         # Disturbance:
         w = self.w
 
-        dxdt = [  ]
-        return ca.vertcat(*dxdt)
+        return self.Ad_i @ x + self.Bd_i @ u + self.R_i @ self.x_d + self.Bw_i @ w
 
     def set_reference(self, ref):
         """
@@ -375,9 +374,6 @@ class Pendulum(object):
 
         # Activate disturbance
         self.w = w
-        global ENABLE_AUGMENTED
-        if ENABLE_AUGMENTED is False:
-            self.Ad_i = None
         # Re-generate dynamics
         self.set_integrators()
         self.set_discrete_time_system()
