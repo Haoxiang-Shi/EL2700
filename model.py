@@ -2,6 +2,7 @@ import casadi as ca
 import numpy as np
 from filterpy.kalman import KalmanFilter
 
+ENABLE_AUGMENTED = False
 class Pendulum(object):
     def __init__(self, h=0.1):
         """
@@ -274,10 +275,16 @@ class Pendulum(object):
         :return: next state
         :rtype: casadi.DM
         """
+        x1 = x[0]
+        x2 = x[1]
+        x3 = x[2]
+        x4 = x[3]
+
         # Disturbance:
         w = self.w
 
-        return 
+        dxdt = [  ]
+        return ca.vertcat(*dxdt)
 
     def set_reference(self, ref):
         """
@@ -368,7 +375,9 @@ class Pendulum(object):
 
         # Activate disturbance
         self.w = w
-
+        global ENABLE_AUGMENTED
+        if ENABLE_AUGMENTED is False:
+            self.Ad_i = None
         # Re-generate dynamics
         self.set_integrators()
         self.set_discrete_time_system()
