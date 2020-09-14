@@ -14,14 +14,14 @@ rho = 1
 A, B, Bw, C = pendulum.get_discrete_system_matrices_at_eq()
 # print(A.shape)
 ctl = DLQR(A, B, C)
-
-if (PART1_DENUG == True):
-    # Get control gains
-    K, P = ctl.get_lqr_gain(Q = np.diag([1.0 / (8.75 ** 2), 1.0 / (2.67 ** 2),\
+K, P = ctl.get_lqr_gain(Q = np.diag([1.0 / (8.75 ** 2), 1.0 / (2.67 ** 2),\
                                      1.0 / (0.189 ** 2), 1.0 / (0.32 ** 2)]), R = 1.0 / (1.57 ** 2)) # From Assignment1, the max u is 1.57
 
-    # Get feedforward gain
-    lr = ctl.get_feedforward_gain(K)
+# Get feedforward gain
+lr = ctl.get_feedforward_gain(K)
+if (PART1_DENUG == True):
+    # Get control gains
+    
 
     # Part I - no disturbance
     sim_env = EmbeddedSimEnvironment(model=pendulum, 
@@ -45,9 +45,9 @@ if (PART2_DEBUG == True):
     Ai, Bi, Bwi, Ci = pendulum.get_augmented_discrete_system()
     # print(Ai.shape)
     ctl.set_system(Ai, Bi, Ci)
-    K, P = ctl.get_lqr_gain(Q = np.diag([1.0/100, 1.0/25, 1.0/0.03, 1.0/0.5, 1000]), 
-                            R = rho*1.0/4)
-    lr = ctl.get_feedforward_gain(K)
+    K, P = ctl.get_lqr_gain(Q = np.diag([1, 50, 1, 1000, 1]), 
+                            R = 0.1)
+    # lr = ctl.get_feedforward_gain(K)
     # Get feed-forward gain              
     ctl.set_lr(lr)     
 
