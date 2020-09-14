@@ -97,8 +97,8 @@ class DLQR(object):
         """
         Get the feedforward gain lr.
 
-        :param L: close loop gain, defaults to None
-        :type L: list, optional
+        :param K: close loop gain, defaults to None
+        :type K: list, optional
         """
 
         if K is None and self.K is not None:
@@ -186,6 +186,8 @@ class DLQR(object):
         
         x_t = x[0:4,:]
         i = x[4,:]
+        # x_t = x[0:4,0]
+        # i = x[4,0]
 
         # Argument checks
         if K is None and self.K is not None:
@@ -202,5 +204,9 @@ class DLQR(object):
         _li = K[0,4]
 
         # Fill the correct control law below
-        u = 0
+        # u1 = - _K @ x_t
+        # u2 = - _li * i
+        # u3 = lr @ r
+        u = - _K @ x_t - _li * i + lr * r
+
         return u

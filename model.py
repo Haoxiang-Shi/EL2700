@@ -105,7 +105,7 @@ class Pendulum(object):
             # Create augmented system dynamics integrator
             x_ag = ca.MX.sym('x', 5)
             dae = {'x': x_ag, 'ode': self.model_ag(x_ag,u), 'p':ca.vertcat(u)}
-            # self.Integrator_ag = ca.integrator('integrator', 'cvodes', dae, options)
+            self.Integrator_ag = ca.integrator('integrator', 'cvodes', dae, options)
 
     def set_discrete_time_system(self):
         """
@@ -125,6 +125,7 @@ class Pendulum(object):
         # Jacobian of exact discretization
         self.Ad = ca.Function('jac_x_Ad', [x, u, w], [ca.jacobian(
                             self.Integrator_lin(x0=x, p=ca.vertcat(u, w))['xf'], x)])
+        # print(self.Ad.shape)
         self.Bd = ca.Function('jac_u_Bd', [x, u, w], [ca.jacobian(
                             self.Integrator_lin(x0=x, p=ca.vertcat(u, w))['xf'], u)])
         self.Bw = ca.Function('jac_u_Bd', [x, u, w], [ca.jacobian(
@@ -155,6 +156,14 @@ class Pendulum(object):
         Ad_eq = self.Ad(self.x_eq, self.u_eq, self.w)
         Bd_eq = self.Bd(self.x_eq, self.u_eq, self.w)
         Bw_eq = self.Bw(self.x_eq, self.u_eq, self.w)
+        # C matrix does not depend on the state
+        # TODO: put this in a better place later!
+        Cd_eq = ca.DM.zeros(1,4)
+        Cd_eq[0,0] = 1
+        Cd_eq[0,1] = 1
+        Cd_eq[0,2] = 1
+        Cd_eq[0,3] = 1
+        self.Cd_eq = Cd_eq
 
         # Instantiate augmented system
         self.Ad_i = ca.DM.zeros(5,5)
@@ -162,9 +171,21 @@ class Pendulum(object):
         self.Bw_i = ca.DM.zeros(5,1)
         self.Cd_i = ca.DM.zeros(1,5)
         self.R_i = ca.DM.zeros(5,1)
-
+        h = self.dt
+        
         # Populate matrices
-        # COMPLETE
+
+        self.Ad_i[0:4,0:4] = Ad_eq
+        self.Ad_i[4,0:4] = -h * Cd_eq
+        self.Ad_i[4,4] = 1
+
+        self.Bd_i[0:4,0] = Bd_eq
+
+        self.R_i[4,0] = self.dt
+
+        self.Bw_i[0:4,0] = Bw_eq
+
+        self.Cd_i[0,0:4] = Cd_eq
 
     def pendulum_linear_dynamics(self, x, u, w):  
         """ 
@@ -276,8 +297,9 @@ class Pendulum(object):
         """
         # Disturbance:
         w = self.w
-
-        return 
+        r = self.x_d
+                
+        return self.Ad_i @ x + self.Bd_i @ u + self.R_i @ r + self.Bw_i @ w
 
     def set_reference(self, ref):
         """
@@ -321,6 +343,7 @@ class Pendulum(object):
         :return: System A, B, Bw, C matrices
         :rtype: casadi.DM
         """
+
         return self.Ad_i, self.Bd_i, self.Bw_i, self.Cd_i
 
 
