@@ -105,7 +105,7 @@ class Pendulum(object):
             # Create augmented system dynamics integrator
             x_ag = ca.MX.sym('x', 5)
             dae = {'x': x_ag, 'ode': self.model_ag(x_ag,u), 'p':ca.vertcat(u)}
-            self.Integrator_ag = ca.integrator('integrator', 'cvodes', dae, options)
+            # self.Integrator_ag = ca.integrator('integrator', 'cvodes', dae, options)
 
     def set_discrete_time_system(self):
         """

@@ -15,25 +15,25 @@ ctl = DLQR(A, B, C)
 K, P = ctl.get_lqr_gain(Q = np.diag([1.0 / (8.75 ** 2), 1.0 / (2.67 ** 2),\
                                      1.0 / (0.189 ** 2), 1.0 / (0.32 ** 2)]), R = 1.0 / (1.57 ** 2)) # From Assignment1, the max u is 1.57
 
-# Get feeforward gain
+# Get feedforward gain
 lr = ctl.get_feedforward_gain(K)
 
 # Part I - no disturbance
-sim_env = EmbeddedSimEnvironment(model=pendulum, 
-                                dynamics=pendulum.discrete_time_dynamics,
-                                controller=ctl.feedfwd_feedback,
-                                time = 20)
-sim_env.set_window(20)
-t, y, u = sim_env.run([0,0,0,0])
-
-# Part I - with disturbance
-# pendulum.enable_disturbance(w=0.01)  
-# sim_env_with_disturbance = EmbeddedSimEnvironment(model=pendulum, 
+# sim_env = EmbeddedSimEnvironment(model=pendulum, 
 #                                 dynamics=pendulum.discrete_time_dynamics,
 #                                 controller=ctl.feedfwd_feedback,
 #                                 time = 20)
-# sim_env_with_disturbance.set_window(10)
-# t, y, u = sim_env_with_disturbance.run([0,0,0,0])
+# sim_env.set_window(20)
+# t, y, u = sim_env.run([0,0,0,0])
+
+# Part I - with disturbance
+pendulum.enable_disturbance(w=0.01)  
+sim_env_with_disturbance = EmbeddedSimEnvironment(model=pendulum, 
+                                dynamics=pendulum.discrete_time_dynamics,
+                                controller=ctl.feedfwd_feedback,
+                                time = 20)
+sim_env_with_disturbance.set_window(20)
+t, y, u = sim_env_with_disturbance.run([0,0,0,0])
 
 
 # ### Part II
